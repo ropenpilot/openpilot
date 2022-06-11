@@ -35,6 +35,8 @@ class CarInterface(CarInterfaceBase):
       tire_stiffness_factor = 0.6371   # hand-tune
       ret.mass = 3045. * CV.LB_TO_KG + STD_CARGO_KG
       set_lat_tune(ret.lateralTuning, LatTunes.TORQUE, MAX_LAT_ACCEL=1.7, FRICTION=0.06)
+      ret.maxLateralAccel = 1.7
+      set_lat_tune(ret.lateralTuning, LatTunes.TORQUE, MAX_LAT_ACCEL=ret.maxLateralAccel, FRICTION=0.06, steering_angle_deadzone_deg=1.0)
 
     elif candidate == CAR.PRIUS_V:
       stop_and_go = True
