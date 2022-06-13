@@ -32,10 +32,7 @@ class CarInterface(CarInterfaceBase):
 
     stop_and_go = False
     steering_angle_deadzone_deg = 0.0
-<<<<<<< HEAD
     CarInterfaceBase.configure_torque_tune(candidate, ret.lateralTuning, steering_angle_deadzone_deg)
-=======
->>>>>>> Delete toyota tuning
 
     if candidate == CAR.PRIUS:
       stop_and_go = True
@@ -43,17 +40,12 @@ class CarInterface(CarInterfaceBase):
       ret.steerRatio = 15.74   # unknown end-to-end spec
       tire_stiffness_factor = 0.6371   # hand-tune
       ret.mass = 3045. * CV.LB_TO_KG + STD_CARGO_KG
-<<<<<<< HEAD
+      steering_angle_deadzone_deg = 0.0
       # Only give steer angle deadzone to for bad angle sensor prius
       for fw in car_fw:
         if fw.ecu == "eps" and not fw.fwVersion == b'8965B47060\x00\x00\x00\x00\x00\x00':
           steering_angle_deadzone_deg = 1.0
           CarInterfaceBase.configure_torque_tune(candidate, ret.lateralTuning, steering_angle_deadzone_deg)
-=======
-      ret.maxLateralAccel = 1.7
-      #TODO only override for bad angle sensor prius
-      steering_angle_deadzone_deg = 0.0
->>>>>>> Delete toyota tuning
 
     elif candidate == CAR.PRIUS_V:
       stop_and_go = True
@@ -61,13 +53,7 @@ class CarInterface(CarInterfaceBase):
       ret.steerRatio = 17.4
       tire_stiffness_factor = 0.5533
       ret.mass = 3340. * CV.LB_TO_KG + STD_CARGO_KG
-<<<<<<< HEAD
       CarInterfaceBase.configure_torque_tune(candidate, ret.lateralTuning, steering_angle_deadzone_deg)
-=======
-      # TODO override until there is enough data
-      ret.maxLateralAccel = 1.8
-      torque_params = CarInterfaceBase.get_torque_params(CAR.PRIUS)
->>>>>>> Delete toyota tuning
 
     elif candidate in (CAR.RAV4, CAR.RAV4H):
       stop_and_go = True if (candidate in CAR.RAV4H) else False
