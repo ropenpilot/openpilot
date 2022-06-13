@@ -6,24 +6,6 @@ class LongTunes(Enum):
   TSS2 = 1
   TSS = 2
 
-class LatTunes(Enum):
-  INDI_PRIUS = 0
-  LQR_RAV4 = 1
-  PID_A = 2
-  PID_B = 3
-  PID_C = 4
-  PID_D = 5
-  PID_E = 6
-  PID_F = 7
-  PID_G = 8
-  PID_I = 9
-  PID_H = 10
-  PID_J = 11
-  PID_K = 12
-  PID_L = 13
-  PID_M = 14
-  PID_N = 15
-
 
 ###### LONG ######
 def set_long_tune(tune, name):
