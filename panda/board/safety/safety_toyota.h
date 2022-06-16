@@ -44,6 +44,11 @@ addr_checks toyota_rx_checks = {toyota_addr_checks, TOYOTA_ADDR_CHECKS_LEN};
 // global actuation limit states
 int toyota_dbc_eps_torque_factor = 100;   // conversion factor for STEER_TORQUE_EPS in %: see dbc file
 
+// steering faults occur when the angle rate is above a certain threshold for too long,
+// allow setting STEER_REQUEST bit to 0 with a non-zero desired torque when expected
+const uint8_t TOYOTA_MAX_STEER_RATE_FRAMES = 19U;
+uint8_t toyota_steer_req_matches;  // counter for steer request bit matching non-zero torque
+
 static uint8_t toyota_compute_checksum(CANPacket_t *to_push) {
   int addr = GET_ADDR(to_push);
   int len = GET_LEN(to_push);
@@ -200,6 +205,7 @@ static int toyota_tx_hook(CANPacket_t *to_send, bool longitudinal_allowed) {
     if (addr == 0x2E4) {
       int desired_torque = (GET_BYTE(to_send, 1) << 8) | GET_BYTE(to_send, 2);
       desired_torque = to_signed(desired_torque, 16);
+      bool steer_req = GET_BIT(to_send, 0U) != 0U;
       bool violation = 0;
 
       uint32_t ts = microsecond_timer_get();
@@ -225,6 +231,19 @@ static int toyota_tx_hook(CANPacket_t *to_send, bool longitudinal_allowed) {
           rt_torque_last = desired_torque;
           ts_last = ts;
         }
+      }
+
+      // handle steer_req bit mismatches: we set the bit to 0 at an expected
+      // interval to bypass an EPS fault, violation if we exceed that frequency
+      bool steer_req_mismatch = (desired_torque != 0) && !steer_req;
+      if (!steer_req_mismatch) {
+        toyota_steer_req_matches = MIN(toyota_steer_req_matches + 1U, 255U);
+      } else {
+        // disallow torque cut if not enough recent matching steer_req messages
+        if (toyota_steer_req_matches < (TOYOTA_MAX_STEER_RATE_FRAMES - 1U)) {
+          violation = 1;
+        }
+        toyota_steer_req_matches = 0U;
       }
 
       // no torque if controls is not allowed
