@@ -6,7 +6,6 @@ from selfdrive.car.toyota.tunes import LatTunes, LongTunes, set_long_tune, set_l
 #from selfdrive.controls.lib.latcontrol_torque import set_torque_tune
 #from selfdrive.car.toyota.tunes import LongTunes, set_long_tune
 from selfdrive.car.toyota.values import Ecu, CAR, ToyotaFlags, TSS2_CAR, NO_DSU_CAR, MIN_ACC_SPEED, EPS_SCALE, EV_HYBRID_CAR, CarControllerParams
-from selfdrive.car.toyota.values import Ecu, CAR, ToyotaFlags, TSS2_CAR, RADAR_ACC_CAR, NO_DSU_CAR, MIN_ACC_SPEED, EPS_SCALE, EV_HYBRID_CAR, CarControllerParams
 from selfdrive.car import STD_CARGO_KG, scale_rot_inertia, scale_tire_stiffness, gen_empty_fingerprint, get_safety_config
 from selfdrive.car.interfaces import CarInterfaceBase
 
