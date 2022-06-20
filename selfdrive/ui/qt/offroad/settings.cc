@@ -66,6 +66,12 @@ TogglesPanel::TogglesPanel(SettingsWindow *parent) : ListWidget(parent) {
       "../assets/offroad/icon_road.png",
     },
     {
+      "EndToLongToggle",
+      "\U0001f96c Disable use of leadcars (Beta) \U0001f96c",
+      "In this mode openpilot will ignore cars and just drive how it thinks a human would.",
+      "../assets/offroad/icon_calibration.png",
+    },
+    {
       "DisengageOnAccelerator",
       "Disengage On Accelerator Pedal",
       "When enabled, pressing the accelerator pedal will disengage openpilot.",

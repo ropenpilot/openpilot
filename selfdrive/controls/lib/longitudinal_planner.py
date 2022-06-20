@@ -6,7 +6,8 @@ from common.numpy_fast import interp
 import cereal.messaging as messaging
 from common.conversions import Conversions as CV
 from common.filter_simple import FirstOrderFilter
-from common.realtime import DT_MDL
+from common.params import Params
+from common.realtime import DT_MDL, sec_since_boot
 from selfdrive.modeld.constants import T_IDXS
 from selfdrive.controls.lib.longcontrol import LongCtrlState
 from selfdrive.controls.lib.longitudinal_mpc_lib.long_mpc import LongitudinalMpc
@@ -47,7 +48,10 @@ def limit_accel_in_turns(v_ego, angle_steers, a_target, CP):
 class Planner:
   def __init__(self, CP, init_v=0.0, init_a=0.0):
     self.CP = CP
-    self.mpc = LongitudinalMpc()
+    e2e_long = Params().get_bool('EndToLongToggle')
+    self.mpc = LongitudinalMpc(e2e=e2e_long)
+    self.e2e_prev = e2e_long
+    self.t = sec_since_boot()
 
     self.fcw = False
 
@@ -59,8 +63,18 @@ class Planner:
     self.j_desired_trajectory = np.zeros(CONTROL_N)
     self.solverExecutionTime = 0.0
 
+  def _e2e_tick(self):
+    a = sec_since_boot()
+    if (a - self.t) > 5.:
+      self.mpc.e2e = Params().get_bool('EndToLongToggle')
+      self.t = a
+    if self.e2e_prev != self.mpc.e2e:
+      self.mpc.reset()
+      self.e2e_prev = self.mpc.e2e
+
   def update(self, sm):
     v_ego = sm['carState'].vEgo
+    self._e2e_tick()
 
     v_cruise_kph = sm['controlsState'].vCruise
     v_cruise_kph = min(v_cruise_kph, V_CRUISE_MAX)
@@ -93,10 +107,22 @@ class Planner:
     accel_limits_turns[1] = max(accel_limits_turns[1], self.a_desired - 0.05)
 
     self.mpc.set_weights(prev_accel_constraint)
-    self.mpc.set_accel_limits(accel_limits_turns[0], accel_limits_turns[1])
+    if self.mpc.e2e:
+      self.mpc.set_accel_limits(-3.5, 2.)
+    else:
+      self.mpc.set_accel_limits(accel_limits_turns[0], accel_limits_turns[1])
     self.mpc.set_cur_state(self.v_desired_filter.x, self.a_desired)
-    self.mpc.update(sm['carState'], sm['radarState'], v_cruise)
-
+    if (len(sm['modelV2'].position.x) == 33 and
+         len(sm['modelV2'].velocity.x) == 33 and
+          len(sm['modelV2'].acceleration.x) == 33):
+      x = np.interp(T_IDXS_MPC, T_IDXS, sm['modelV2'].position.x)
+      v = np.interp(T_IDXS_MPC, T_IDXS, sm['modelV2'].velocity.x)
+      a = np.interp(T_IDXS_MPC, T_IDXS, sm['modelV2'].acceleration.x)
+    else:
+      x = np.zeros(len(T_IDXS_MPC))
+      v = np.zeros(len(T_IDXS_MPC))
+      a = np.zeros(len(T_IDXS_MPC))
+    self.mpc.update(sm['carState'], sm['radarState'], v_cruise, x, v, a)
     self.v_desired_trajectory = np.interp(T_IDXS[:CONTROL_N], T_IDXS_MPC, self.mpc.v_solution)
     self.a_desired_trajectory = np.interp(T_IDXS[:CONTROL_N], T_IDXS_MPC, self.mpc.a_solution)
     self.j_desired_trajectory = np.interp(T_IDXS[:CONTROL_N], T_IDXS_MPC[:-1], self.mpc.j_solution)
@@ -125,7 +151,8 @@ class Planner:
     longitudinalPlan.jerks = self.j_desired_trajectory.tolist()
 
     longitudinalPlan.hasLead = sm['radarState'].leadOne.status
-    longitudinalPlan.longitudinalPlanSource = self.mpc.source
+    if not self.mpc.e2e:
+      longitudinalPlan.longitudinalPlanSource = self.mpc.source
     longitudinalPlan.fcw = self.fcw
 
     longitudinalPlan.solverExecutionTime = self.mpc.solve_time
