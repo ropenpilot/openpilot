@@ -51,9 +51,6 @@ class CarInterface(CarInterfaceBase):
       ret.steerRatio = 17.4
       tire_stiffness_factor = 0.5533
       ret.mass = 3340. * CV.LB_TO_KG + STD_CARGO_KG
-      # TODO override until there is enough data
-      ret.maxLateralAccel = 1.8
-      torque_params = CarInterfaceBase.get_torque_params(CAR.PRIUS)
       set_torque_tune(ret.lateralTuning, torque_params['LAT_ACCEL_FACTOR'], torque_params['FRICTION'], steering_angle_deadzone_deg)
 
     elif candidate in (CAR.RAV4, CAR.RAV4H):
@@ -129,7 +126,7 @@ class CarInterface(CarInterfaceBase):
       ret.mass = 3585. * CV.LB_TO_KG + STD_CARGO_KG  # Average between ICE and Hybrid
       set_lat_tune(ret.lateralTuning, LatTunes.PID_D)
 
-      # 2019+ Rav4 TSS2 uses two different steering racks and specific tuning seems to be necessary.
+      # 2019+ RAV4 TSS2 uses two different steering racks and specific tuning seems to be necessary.
       # See https://github.com/commaai/openpilot/pull/21429#issuecomment-873652891
       for fw in car_fw:
         if fw.ecu == "eps" and (fw.fwVersion.startswith(b'\x02') or fw.fwVersion in [b'8965B42181\x00\x00\x00\x00\x00\x00']):
