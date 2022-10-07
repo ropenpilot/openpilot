@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
+from cereal import car, log, messaging
 import os
 import math
 from numbers import Number
-
+from selfdrive.car.toyota.values import CarControllerParams
 from cereal import car, log
 from common.numpy_fast import clip
 from common.realtime import sec_since_boot, config_realtime_process, Priority, Ratekeeper, DT_CTRL
@@ -71,6 +72,11 @@ class Controls:
     self.camera_packets = ["roadCameraState", "driverCameraState"]
     if TICI:
       self.camera_packets.append("wideRoadCameraState")
+    self.nsm = None
+    if self.nsm == None:
+      service = "newService"
+      self.nsm = messaging.SubMaster([service])
+    self.slider = 0
 
     self.can_sock = can_sock
     if can_sock is None:
@@ -210,7 +216,7 @@ class Controls:
       (CS.brakePressed and (not self.CS_prev.brakePressed or not CS.standstill)):
       self.events.add(EventName.pedalPressed)
 
-    if CS.gasPressed:
+    if CS.gasPressed or self.slider != 0:
       self.events.add(EventName.pedalPressedPreEnable if self.disengage_on_accelerator else
                       EventName.gasPressedOverride)
 
@@ -559,9 +565,22 @@ class Controls:
 
     if not self.joystick_mode:
       # accel PID loop
+      service = "newService"
+      self.slider = self.nsm[service].sliderone
+      a = self.nsm.update(0)
       pid_accel_limits = self.CI.get_pid_accel_limits(self.CP, CS.vEgo, self.v_cruise_kph * CV.KPH_TO_MS)
       t_since_plan = (self.sm.frame - self.sm.rcv_frame['longitudinalPlan']) * DT_CTRL
-      actuators.accel = self.LoC.update(CC.longActive, CS, long_plan, pid_accel_limits, t_since_plan)
+      slider = self.slider
+      if slider > 0:
+        actuators.accel = float(slider) / 127. * CarControllerParams.ACCEL_MAX
+        actuators.accel = clip(actuators.accel, 0., CarControllerParams.ACCEL_MAX)
+        self.LoC.reset(v_pid=CS.vEgo)
+      elif slider < 0:
+        brakebrake = float(slider) / 128. * abs(CarControllerParams.ACCEL_MIN)
+        actuators.accel = brakebrake
+        self.LoC.reset(v_pid=CS.vEgo)
+      else:
+        actuators.accel = self.LoC.update(CC.longActive, CS, long_plan, pid_accel_limits, t_since_plan)
 
       # Steering PID loop and lateral MPC
       desired_curvature, desired_curvature_rate = get_lag_adjusted_curvature(self.CP, CS.vEgo,

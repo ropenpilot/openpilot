@@ -1565,6 +1565,12 @@ struct Joystick {
   axes @0: List(Float32);
   buttons @1: List(Bool);
 }
+struct NewService {
+  # convenient for debug and live tuning
+  sliderone @0: Int8;
+  slidertwo @1: Int8;
+  wssheartbeat @2: UInt16;
+}
 
 struct DriverState {
   frameId @0 :UInt32;
@@ -1823,6 +1829,7 @@ struct Event {
     navThumbnail @84: Thumbnail;
 
     # *********** debug ***********
+    newService @90 :NewService;
     testJoystick @52 :Joystick;
     roadEncodeData @86 :EncodeData;
     driverEncodeData @87 :EncodeData;
