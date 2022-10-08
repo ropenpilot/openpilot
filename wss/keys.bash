@@ -7,16 +7,12 @@ source ${curdir}/env.sh
 
 keydir=${curdir}/keys
 
-curbind=${keydir}/bind_address
+curbind=${keydir}/.bind_address
 key=${keydir}/server.key.pem
 cert=${keydir}/server.cert.pem
-pfx=${keydir}/server.pfx
 
-function need_openssl { which openssl 2>/dev/null 1>&2 || \
-  (echo needopenssl; exit 1)
-}
 function already_exists {
-  test -f "${key}" -a -f "${cert}" -a -f "${pfx}" -a -f "${curbind}"
+  test -f "${key}" -a -f "${cert}" -a -f "${curbind}"
 }
 function new_bind {
   test ! "$(cat ${curbind})" = "${BIND}"
@@ -30,20 +26,13 @@ function generate_keys {
     -nodes -days 365 -newkey rsa:2048 \
     -keyout ${key} -out ${cert} -subj /CN="${BIND}"
 
-  openssl pkcs12 -export \
-    -out ${pfx} -inkey ${key} -in ${cert} \
-    -password pass:'test'
-
   cp ${cert} $(dirname ${cert})/../public
 }
-
-
-
-need_openssl
 
 if $(already_exists); then
   echo keys already exist
   if $(new_bind); then
+    # regenerate
     rm -f ${keydir}/*
   else
   exit 0

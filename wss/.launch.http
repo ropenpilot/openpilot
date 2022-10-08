@@ -4,6 +4,9 @@ me="$(echo $0)"
 mydir=$(cd $(dirname ${me}) && pwd)
 mexe=$(basename $0)
 
+bash ${mydir}/keys.bash
+pythonbind=$(cat ${mydir}/cfg.c2.ip)
+pythonport=80
 
 function clean_up {
   echo ctrlc
@@ -12,8 +15,6 @@ function clean_up {
 }
 trap clean_up SIGHUP SIGINT SIGTERM
 
-pythonport=80
-pythonbind=192.168.1.219
 
 echo starting http
 python3 -m http.server --bind $pythonbind --directory ${mydir}/public $pythonport &

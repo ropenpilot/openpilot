@@ -4,7 +4,8 @@ me="$(echo $0)"
 mydir=$(cd $(dirname ${me}) && pwd)
 mexe=$(basename $0)
 
-export BIND=192.168.1.219
+bash ${mydir}/keys.bash
+export BIND=$(cat ${mydir}/cfg.c2.ip)
 export HOST=$BIND
 export PORT=443
 
