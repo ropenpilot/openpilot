@@ -593,6 +593,7 @@ class Controls:
                                                                              lat_plan.curvatures,
                                                                              lat_plan.curvatureRates)
       lac_log = log.ControlsState.LateralTorqueState.new_message()
+      sliderr = sliderr * -1
       if sliderr > 0:
         sliderr = (100 ** (float(sliderr) / 127.) - 1) / (100 - 1)
         actuators.steer = clip(sliderr, 0., 1.)
