@@ -592,6 +592,7 @@ class Controls:
                                                                              lat_plan.psis,
                                                                              lat_plan.curvatures,
                                                                              lat_plan.curvatureRates)
+      lac_log = log.ControlsState.LateralTorqueState.new_message()
       if sliderr > 0:
         sliderr = (100 ** (float(sliderr) / 127.) - 1) / (100 - 1)
         actuators.steer = clip(sliderr, 0., 1.)
@@ -601,6 +602,7 @@ class Controls:
         sliderr = -1. * (100 ** (float(-1. * sliderr) / 128.) - 1) / (100 - 1)
         actuators.steer = clip(sliderr, -1., 0.)
         actuators.steeringAngleDeg = actuators.steer * 45.
+        self.LaC.reset()
       else:
         actuators.steer, actuators.steeringAngleDeg, lac_log = self.LaC.update(CC.latActive, CS, self.VM, params,
                                                                              self.last_actuators, desired_curvature,
