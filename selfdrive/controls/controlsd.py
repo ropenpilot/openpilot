@@ -593,24 +593,14 @@ class Controls:
                                                                              lat_plan.curvatures,
                                                                              lat_plan.curvatureRates)
       if sliderr > 0:
-        lac_log = log.ControlsState.LateralDebugState.new_message()
         sliderr = (100 ** (float(sliderr) / 127.) - 1) / (100 - 1)
         actuators.steer = clip(sliderr, 0., 1.)
         actuators.steeringAngleDeg = actuators.steer * 45.
-        lac_log.active = self.active
-        lac_log.steeringAngleDeg = CS.steeringAngleDeg
-        lac_log.output = actuators.steer
-        lac_log.saturated = abs(actuators.steer) >= 0.9
         self.LaC.reset()
       elif sliderr < 0:
-        lac_log = log.ControlsState.LateralDebugState.new_message()
         sliderr = -1. * (100 ** (float(-1. * sliderr) / 128.) - 1) / (100 - 1)
         actuators.steer = clip(sliderr, -1., 0.)
         actuators.steeringAngleDeg = actuators.steer * 45.
-        lac_log.active = self.active
-        lac_log.steeringAngleDeg = CS.steeringAngleDeg
-        lac_log.output = actuators.steer
-        lac_log.saturated = abs(actuators.steer) >= 0.9
       else:
         actuators.steer, actuators.steeringAngleDeg, lac_log = self.LaC.update(CC.latActive, CS, self.VM, params,
                                                                              self.last_actuators, desired_curvature,
