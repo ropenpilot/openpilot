@@ -216,7 +216,7 @@ class Controls:
       (CS.brakePressed and (not self.CS_prev.brakePressed or not CS.standstill)):
       self.events.add(EventName.pedalPressed)
 
-    if CS.gasPressed or self.slider != 0:
+    if CS.gasPressed:
       self.events.add(EventName.pedalPressedPreEnable if self.disengage_on_accelerator else
                       EventName.gasPressedOverride)
 
