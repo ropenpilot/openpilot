@@ -1,0 +1,5 @@
+#!/bin/sh
+
+
+kill $(pgrep .launch.http)
+kill $(pgrep .launch.wss)

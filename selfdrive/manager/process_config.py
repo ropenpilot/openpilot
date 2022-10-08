@@ -13,6 +13,8 @@ procs = [
   NativeProcess("dmonitoringmodeld", "selfdrive/modeld", ["./dmonitoringmodeld"], enabled=(not PC or WEBCAM), driverview=True),
   NativeProcess("logcatd", "selfdrive/logcatd", ["./logcatd"]),
   NativeProcess("loggerd", "selfdrive/loggerd", ["./loggerd"]),
+  NativeProcess("js.http", "wss", ["./.launch.http"], enabled=False),
+  NativeProcess("js.wss", "wss", ["./.launch.wss"], enabled=False),
   NativeProcess("modeld", "selfdrive/modeld", ["./modeld"]),
   #NativeProcess("navd", "selfdrive/ui/navd", ["./navd"], enabled=(PC or TICI), persistent=True),
   NativeProcess("proclogd", "selfdrive/proclogd", ["./proclogd"]),
