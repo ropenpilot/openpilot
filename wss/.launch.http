@@ -1,0 +1,31 @@
+#!/bin/sh
+
+me="$(echo $0)"
+mydir=$(cd $(dirname ${me}) && pwd)
+mexe=$(basename $0)
+
+
+function clean_up {
+  echo ctrlc
+  kill $pid
+  exit 0
+}
+trap clean_up SIGHUP SIGINT SIGTERM
+
+pythonport=80
+pythonbind=192.168.1.219
+
+echo starting http
+python3 -m http.server --bind $pythonbind --directory ${mydir}/public $pythonport &
+pid="$!"
+echo http start $pid
+
+if wait $pid; then
+  echo 'http returned nonzero'
+else
+  echo 'http returned zero(success)'
+fi
+
+#export LD_LIBRARY_PATH="/system/lib64:$LD_LIBRARY_PATH"
+#export QT_PLUGIN_PATH="../../third_party/qt-plugins/$(uname -m)"
+#exec ./_ui

@@ -1,0 +1,27 @@
+#!/bin/sh
+
+me="$(echo $0)"
+mydir=$(cd $(dirname ${me}) && pwd)
+mexe=$(basename $0)
+
+export BIND=192.168.1.219
+export HOST=$BIND
+export PORT=443
+
+function clean_up {
+  echo ctrlc
+  kill $pid
+  exit 0
+}
+trap clean_up SIGHUP SIGINT SIGTERM
+
+echo starting wss
+${mydir}/wssServer &
+pid="$!"
+echo wss start $pid
+
+if wait $pid; then
+  echo 'wss returned nonzero'
+else
+  echo 'wss returned zero(success)'
+fi
