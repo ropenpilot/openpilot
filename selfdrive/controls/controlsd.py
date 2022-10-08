@@ -77,6 +77,7 @@ class Controls:
       service = "newService"
       self.nsm = messaging.SubMaster([service])
     self.slider = 0
+    self.sliderr = 0
 
     self.can_sock = can_sock
     if can_sock is None:
@@ -567,10 +568,12 @@ class Controls:
       # accel PID loop
       service = "newService"
       self.slider = self.nsm[service].sliderone
+      self.sliderr = self.nsm[service].slidertwo
       a = self.nsm.update(0)
       pid_accel_limits = self.CI.get_pid_accel_limits(self.CP, CS.vEgo, self.v_cruise_kph * CV.KPH_TO_MS)
       t_since_plan = (self.sm.frame - self.sm.rcv_frame['longitudinalPlan']) * DT_CTRL
       slider = self.slider
+      sliderr = self.sliderr
       if slider > 0:
         slider = (100 ** (float(slider) / 127.) - 1) / (100 - 1)
         actuators.accel = slider * abs(CarControllerParams.ACCEL_MAX)
@@ -589,7 +592,20 @@ class Controls:
                                                                              lat_plan.psis,
                                                                              lat_plan.curvatures,
                                                                              lat_plan.curvatureRates)
-      actuators.steer, actuators.steeringAngleDeg, lac_log = self.LaC.update(CC.latActive, CS, self.VM, params,
+      lac_log = log.ControlsState.LateralTorqueState.new_message()
+      sliderr = sliderr * -1
+      if sliderr > 0:
+        sliderr = (100 ** (float(sliderr) / 127.) - 1) / (100 - 1)
+        actuators.steer = clip(sliderr, 0., 1.)
+        actuators.steeringAngleDeg = actuators.steer * 45.
+        self.LaC.reset()
+      elif sliderr < 0:
+        sliderr = -1. * (100 ** (float(-1. * sliderr) / 128.) - 1) / (100 - 1)
+        actuators.steer = clip(sliderr, -1., 0.)
+        actuators.steeringAngleDeg = actuators.steer * 45.
+        self.LaC.reset()
+      else:
+        actuators.steer, actuators.steeringAngleDeg, lac_log = self.LaC.update(CC.latActive, CS, self.VM, params,
                                                                              self.last_actuators, desired_curvature,
                                                                              desired_curvature_rate, self.sm['liveLocationKalman'])
     else:
