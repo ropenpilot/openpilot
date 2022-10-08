@@ -216,7 +216,7 @@ class Controls:
       (CS.brakePressed and (not self.CS_prev.brakePressed or not CS.standstill)):
       self.events.add(EventName.pedalPressed)
 
-    if CS.gasPressed or self.slider != 0:
+    if CS.gasPressed:
       self.events.add(EventName.pedalPressedPreEnable if self.disengage_on_accelerator else
                       EventName.gasPressedOverride)
 
@@ -572,11 +572,13 @@ class Controls:
       t_since_plan = (self.sm.frame - self.sm.rcv_frame['longitudinalPlan']) * DT_CTRL
       slider = self.slider
       if slider > 0:
-        actuators.accel = float(slider) / 127. * CarControllerParams.ACCEL_MAX
+        slider = (100 ** (float(slider) / 127.) - 1) / (100 - 1)
+        actuators.accel = slider * abs(CarControllerParams.ACCEL_MAX)
         actuators.accel = clip(actuators.accel, 0., CarControllerParams.ACCEL_MAX)
         self.LoC.reset(v_pid=CS.vEgo)
       elif slider < 0:
-        brakebrake = float(slider) / 128. * abs(CarControllerParams.ACCEL_MIN)
+        slider = -1. * (100 ** (float(-1. * slider) / 128.) - 1) / (100 - 1)
+        brakebrake = slider * abs(CarControllerParams.ACCEL_MIN)
         actuators.accel = brakebrake
         self.LoC.reset(v_pid=CS.vEgo)
       else:
